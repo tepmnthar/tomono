@@ -85,18 +85,23 @@ function add-repos {
 			folder="$name"
                 fi
 
-                # if [[ "$is_add" = true ]]; then
-                #         git_remote_array=$(git remote)
-                #         if echo "${git_remote_array[@]}" | grep -wq "$name" &>/dev/null; then
-                #             echo "$name remote existed. Jump to next."
-                #             continue
-                #         fi
-                # fi
+                git_remote_array=$(git remote)
+                if echo "${git_remote_array[@]}" | grep -wq "$name" &>/dev/null; then
+                        # If remote exists, everything all right.
+                        echo "$name remote existed. Jump to next."
+                        continue
+                fi
 
 		echo "Merging in $repo.." >&2
 		git remote add "$name" "$repo"
 		echo "Fetching $name.." >&2
 		git fetch -q "$name"
+
+                if [[ -d "$folder" ]]; then
+                        # If repo folder is existed, git merge process has been done by others. Rebuild remotes only.
+                        echo "$name folder existed. Jump to next."
+                        continue
+                fi
 
 		# Now we've got all tags in .git/refs/tags: put them away for a sec
 		if [[ -n "$(ls .git/refs/tags)" ]]; then
